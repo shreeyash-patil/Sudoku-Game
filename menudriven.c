@@ -26,10 +26,10 @@ int main(){
     double time;
     while(choice_1){
         printf("\nMain Menu:\n");
-        printf("1 - To start a new game..\n");
-        printf("2 - To load a saved game..\n");
-        printf("3 - To delete a game..\n");
-        printf("0 - To exit game..\n");
+        printf("1 - New Game..\n");
+        printf("2 - Load Game..\n");
+        printf("3 - Delete Game..\n");
+        printf("0 - Quit Game..\n");
         printf("Enter your choice: ");
         scanf("%d", &choice_1);
         printf("\n");
@@ -38,32 +38,35 @@ int main(){
                 choice_2 = 1;
                 while(choice_2){
                     printf("Secondary Menu..\n");
-                    printf("1 - To select sudoku size...\n");
-                    printf("0 - To return to main menu...\n");
+                    printf("1 - Select sudoku size...\n");
+                    printf("0 - Return to main menu...\n");
                     printf("Enter your choice: ");
                     scanf("%d", &choice_2);
                     printf("\n");
                     switch(choice_2){
                         case 1:
-                            printf("Enter Size of sudoku 4, 9, 16.\n");
+                            printf("Enter Size of sudoku 4, 9, 16.\nSize: ");
                             scanf("%d", &size);
-                            printf("Enter Difficulty :\n1 - Easy.\n2 - Medium.\n3 - Hard.\n");
+                            printf("\n");
+                            printf("Enter Difficulty :\n1 - Easy.\n2 - Medium.\n3 - Hard.\nDifficulty: ");
                             scanf("%d", &difficulty);
                             printf("\n");
                             if((size == 4 || size == 9 || size == 16) && (difficulty == 1 || difficulty == 2 || difficulty == 3)){
                                 start_game(&sudoku, &take_ip_sudoku, &skeleton_sudoku, &solved_sudoku, size, difficulty, &U, &R);
+                                printf("\n\t\tGame Begins!!\n\n");
                                 print_sudoku(&take_ip_sudoku, &skeleton_sudoku);
                                 choice_3 = 1;
                                 while(choice_3){
                                     printf("Tertiary Menu..\n");
-                                    printf("1 - To enter a number in sudoku..\n");
-                                    printf("2 - To get a hint..\n");
-                                    printf("3 - To undo.\n");
-                                    printf("4 - To redo.\n");
-                                    printf("5 - To autosolve the sudoku.\n");
-                                    printf("6 - To save sudoku and return to secondary menu..\n");
-                                    printf("7 - To check if any input is wrong..\n");
-                                    printf("0 - To return to secondary menu without saving\n");
+                                    printf("1 - Enter a number in sudoku..\n");
+                                    printf("2 - Get a hint..\n");
+                                    printf("3 - Undo.\n");
+                                    printf("4 - Redo.\n");
+                                    printf("5 - Autosolve the sudoku.\n");
+                                    printf("6 - Save sudoku and return..\n");
+                                    printf("7 - Check wrong Inputs..\n");
+                                    printf("8 - Reset Sudoku\n");
+                                    printf("0 - Return without saving\n");
                                     printf("Enter your choice: ");
                                     scanf("%d", &choice_3);
                                     printf("\n");
@@ -126,6 +129,11 @@ int main(){
                                             check_sudoku(&take_ip_sudoku, &solved_sudoku);
                                             print_sudoku(&take_ip_sudoku, &skeleton_sudoku);
                                             break;
+                                        case 8:
+                                            reset_sudoku(&take_ip_sudoku, &skeleton_sudoku);
+                                            printf("Sudoku has been reset.\n\n");
+                                            print_sudoku(&take_ip_sudoku, &skeleton_sudoku);
+                                            break;
                                         case 0:
                                             end_game(&sudoku, &take_ip_sudoku, &skeleton_sudoku, &solved_sudoku, &U, &R);
                                             row = col = num = -1;
@@ -169,14 +177,15 @@ int main(){
                 choice_4 = 1;
                 while(choice_4){
                     printf("Tertiary Menu..\n");
-                    printf("1 - To enter a number in sudoku..\n");
-                    printf("2 - To get a hint..\n");
-                    printf("3 - To undo.\n");
-                    printf("4 - To redo.\n");
-                    printf("5 - To autosolve the sudoku.\n");
-                    printf("6 - To save sudoku and return to secondary menu..\n");
-                    printf("7 - To check if any input is wrong..\n");
-                    printf("0 - To return to secondary menu without saving\n");
+                    printf("1 - Enter a number in sudoku..\n");
+                    printf("2 - Get a hint..\n");
+                    printf("3 - Undo.\n");
+                    printf("4 - Redo.\n");
+                    printf("5 - Autosolve the sudoku.\n");
+                    printf("6 - Save sudoku and return..\n");
+                    printf("7 - Check wrong Inputs..\n");
+                    printf("8 - Reset Sudoku\n");
+                    printf("0 - Return without saving\n");
                     printf("Enter your choice: ");
                     scanf("%d", &choice_4);
                     printf("\n");
@@ -238,6 +247,11 @@ int main(){
                             break;
                         case 7:
                             check_sudoku(&take_ip_sudoku, &solved_sudoku);
+                            print_sudoku(&take_ip_sudoku, &skeleton_sudoku);
+                            break;
+                        case 8:
+                            reset_sudoku(&take_ip_sudoku, &skeleton_sudoku);
+                            printf("Sudoku has been reset.\n\n");
                             print_sudoku(&take_ip_sudoku, &skeleton_sudoku);
                             break;
                         case 0:

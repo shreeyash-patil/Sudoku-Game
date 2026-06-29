@@ -30,3 +30,4 @@ bool find_empty_cell(Sudoku *sudoku, int *row, int *col);
 void remove_cells(Sudoku *sudoku, int cells_to_remove);
 void shuffle(int arr[], int n);
 void generate_sudoku(Sudoku *sudoku, int difficulty);
+void reset_sudoku(Sudoku *sudoku, Sudoku *skeleton_sudoku);
