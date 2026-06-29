@@ -12,6 +12,19 @@
 #define N 9
 #define EMPTY 0
 
+#ifdef _WIN32
+#include <direct.h>
+// Windows requires the folder path
+#define MAKE_DIR(path) _mkdir(path)
+#else
+#include <sys/stat.h>
+#include <sys/types.h>
+// Mac/Linux require the path and permissions
+#define MAKE_DIR(path) mkdir(path, 0777)
+#endif
+
+#define DEFAULT_SAVE_PATH "saves/"
+
 
 void initstack(stack *s){
     s -> top = NULL;
@@ -540,6 +553,18 @@ void check_sudoku(Sudoku *sudoku, Sudoku *solved_sudoku){
     return;
 }
 
+
+void reset_sudoku(Sudoku *sudoku, Sudoku *skeleton_sudoku){
+    int size = sudoku -> size;
+    for(int row = 0; row < size; row++){
+        for(int col = 0; col < size; col++){
+            if(skeleton_sudoku -> box[row][col] == 1){
+                sudoku -> box[row][col] = 0;
+            }
+        }    
+    }
+}
+
 /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 
@@ -674,18 +699,38 @@ void printsudoku(int n, int **board) {
 /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 
+//Helper function to create directory
+void ensure_save_folder_exists() {
+    // If it already exists, this safely fails in the background and code continues
+    MAKE_DIR("saves");
+}
+
 // Function to save Sudoku to a file
-void save_sudoku_to_file(Sudoku *sudoku, const char *filename) {
-    FILE *file = fopen(filename, "w");
-    if (!file) {
-        printf("Error: Unable to open file %s for writing.\n", filename);
-        return;
+bool save_sudoku_to_file(Sudoku *sudoku, const char *filename) {
+    if (strcmp(filename, "exit") == 0) {
+        return false;
+    }
+    
+    ensure_save_folder_exists();
+    char filepath[256];
+    snprintf(filepath, sizeof(filepath), "%s%s", DEFAULT_SAVE_PATH, filename);
+
+    //Check if filename already exits
+    FILE *check_file = fopen(filepath, "r");
+    if (check_file) {
+        fclose(check_file);
+        printf("Error: A save file with the name '%s' already exists.\n", filename);
+        return false;
     }
 
-    // Write size on the first line
+    FILE *file = fopen(filepath, "w");
+    if (!file) {
+        printf("Error: Unable to open file %s for writing.\n", filename);
+        return false;
+    }
+
     fprintf(file, "%d\n", sudoku->size);
 
-    // Write the Sudoku grid row by row
     for (int i = 0; i < sudoku->size; i++) {
         for (int j = 0; j < sudoku->size; j++) {
             fprintf(file, "%d ", sudoku->box[i][j]);
@@ -695,25 +740,32 @@ void save_sudoku_to_file(Sudoku *sudoku, const char *filename) {
 
     fclose(file);
 
-    // Add this file to the master file
-    add_filename_to_master(filename, "all_sudoku_files.txt");
+    // ONLY add to the master file if it is NOT a skeleton file
+    if (strstr(filename, "_skeleton") == NULL) {
+        char master_filepath[256];
+        snprintf(master_filepath, sizeof(master_filepath), "%sall_sudoku_files.txt", DEFAULT_SAVE_PATH);
+        add_filename_to_master(filename, master_filepath);
+    }
+
+    printf("Game successfully saved as '%s'.\n", filename);
+    return true;
 }
 
 // Function to read Sudoku from a file
-void read_sudoku_from_file(Sudoku *sudoku, const char *filename) {
-    FILE *file = fopen(filename, "r");
+bool read_sudoku_from_file(Sudoku *sudoku, const char *filename) {
+    char filepath[256];
+    snprintf(filepath, sizeof(filepath), "%s%s", DEFAULT_SAVE_PATH, filename);
+
+    FILE *file = fopen(filepath, "r");
     if (!file) {
-        printf("Error: Unable to open file %s for reading.\n", filename);
-        return;
+        printf("Error: Game '%s' not found.\n", filename);
+        return false; // Tells main.c the load failed
     }
 
-    // Read the size from the first line
     fscanf(file, "%d", &sudoku->size);
 
-    // Allocate memory for the Sudoku grid
     init_sudoku(sudoku, sudoku->size);
 
-    // Read the grid
     for (int i = 0; i < sudoku->size; i++) {
         for (int j = 0; j < sudoku->size; j++) {
             fscanf(file, "%d", &sudoku->box[i][j]);
@@ -721,24 +773,31 @@ void read_sudoku_from_file(Sudoku *sudoku, const char *filename) {
     }
 
     fclose(file);
+    return true; // Tells main.c the load was successful
 }
 
 // Function to delete a file
 void delete_file(const char *filename) {
+    char filepath[256];
+    snprintf(filepath, sizeof(filepath), "%s%s", DEFAULT_SAVE_PATH, filename);
     // Attempt to delete the file
-    if (remove(filename) == 0) {
-        printf("File %s deleted successfully.\n", filename);
+    if (remove(filepath) == 0) {
+        printf("File '%s' deleted successfully.\n", filename);
 
-        // Remove the file name from the master file
-        const char *master_file = "all_sudoku_files.txt";
+        // Set up paths for the master file and a temporary file
+        char master_file[256];
+        snprintf(master_file, sizeof(master_file), "%sall_sudoku_files.txt", DEFAULT_SAVE_PATH);
+                
+        char temp_file[256];
+        snprintf(temp_file, sizeof(temp_file), "%stemp_master_file.txt", DEFAULT_SAVE_PATH);
+
         FILE *master = fopen(master_file, "r");
         if (!master) {
             printf("Error: Unable to open master file %s.\n", master_file);
             return;
         }
 
-        // Create a temporary file to store updated entries
-        FILE *temp = fopen("temp_master_file.txt", "w");
+        FILE *temp = fopen(temp_file, "w");
         if (!temp) {
             printf("Error: Unable to create temporary file.\n");
             fclose(master);
@@ -764,13 +823,15 @@ void delete_file(const char *filename) {
             printf("Error: Unable to remove old master file.\n");
             return;
         }
-        if (rename("temp_master_file.txt", master_file) != 0) {
+        if (rename(temp_file, master_file) != 0) {
             printf("Error: Unable to rename temporary file to master file.\n");
         }
-    } else {
-        printf("Error: Unable to delete file %s.\n", filename);
+    } 
+    else {
+        printf("Error: Unable to delete file '%s'.\n", filename);
     }
 }
+
 // Function to add a filename to the master file
 void add_filename_to_master(const char *filename, const char *master_file) {
     FILE *file = fopen(master_file, "a");
@@ -784,32 +845,33 @@ void add_filename_to_master(const char *filename, const char *master_file) {
 }
 
 // Function to print all Sudoku filenames from the master file
-void print_all_sudoku_filenames(const char *master_file) {
+void print_all_sudoku_filenames() {
+    char master_file[256];
+    snprintf(master_file, sizeof(master_file), "%sall_sudoku_files.txt", DEFAULT_SAVE_PATH);
+
     FILE *file = fopen(master_file, "r");
     if (!file) {
-        printf("Error: Unable to open master file %s.\n", master_file);
+        printf("No saved games found.\n");
         return;
     }
 
     char filename[256];
-    printf("All Sudoku Files:\n");
+    printf("\n--- Saved Games ---\n");
+        
+    bool has_games = false;
     while (fgets(filename, sizeof(filename), file)) {
         // Remove trailing newline character
         filename[strcspn(filename, "\n")] = '\0';
-        printf("%s\n", filename);
+        printf("- %s\n", filename);
+        has_games = true;
     }
+
+    if (!has_games) {
+        printf("(Empty)\n");
+    }
+    printf("-------------------\n\n");
 
     fclose(file);
 }
 
 
-void reset_sudoku(Sudoku *sudoku, Sudoku *skeleton_sudoku){
-    int size = sudoku -> size;
-    for(int row = 0; row < size; row++){
-        for(int col = 0; col < size; col++){
-            if(skeleton_sudoku -> box[row][col] == 1){
-                sudoku -> box[row][col] = 0;
-            }
-        }    
-    }
-}
