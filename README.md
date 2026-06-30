@@ -21,7 +21,7 @@ Ensure all of the following files are in the same directory before compiling:
 * `logic.c` - Core game mechanics, Sudoku generation, solving algorithms, and file handling.
 * `*.h` (Header Files) - Contains definitions, structures, and function declarations.
 
-## ⚙️ How to Compile & Run
+## ⚙️ How to Compile
 
 To compile this project, you will need a C compiler installed on your system (such as **GCC**).
 
