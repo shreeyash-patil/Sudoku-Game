@@ -19,6 +19,7 @@ int is_safe(Sudoku *sudoku, int row, int col, int num);
 int solve_sudoku(Sudoku *sudoku);
 void print_sudoku(Sudoku *sudoku, Sudoku *skeleton);
 void copy_sudoku(Sudoku *source, Sudoku *dest);
+void copy_base_sudoku(Sudoku *sudoku, Sudoku *ip_sudoku, Sudoku *skeleton);
 void generate_skeleton_sudoku(Sudoku *sudoku, Sudoku *skeleton);
 int count_row_elements(Sudoku *sudoku, int row);
 int count_col_elements(Sudoku *sudoku, int col);

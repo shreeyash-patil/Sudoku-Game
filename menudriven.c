@@ -69,7 +69,7 @@ int main() {
                                     printf("2 - Get a hint..\n");
                                     printf("3 - Undo.\n");
                                     printf("4 - Redo.\n");
-                                    printf("5 - Autosolve the sudoku.\n");
+                                    printf("5 - Show Answer.\n");
                                     printf("6 - Save sudoku and return..\n");
                                     printf("7 - Check wrong Inputs..\n");
                                     printf("8 - Reset Sudoku\n");
@@ -139,7 +139,7 @@ int main() {
                                                 size = difficulty = 0;
                                                 gamename[0] = '\0';
                                                 end_game(&sudoku, &take_ip_sudoku, &skeleton_sudoku, &solved_sudoku, &U, &R);
-                                                choice_3 = 0; // Exits to Secondary Menu
+                                                choice_3 = 0; 
                                             }
                                             break;
                                         case 7:
@@ -191,16 +191,20 @@ int main() {
                 
                 if (!read_sudoku_from_file(&take_ip_sudoku, gamename)) {
                     printf("Returning to Main Menu...\n\n");
+                    free_sudoku(&take_ip_sudoku);
                     break; 
                 }
 
                 strcat(gamename, "_skeleton");
                 read_sudoku_from_file(&skeleton_sudoku, gamename);
+                init_sudoku(&sudoku, take_ip_sudoku.size);
+                init_sudoku(&solved_sudoku, take_ip_sudoku.size);
                 
-                copy_sudoku(&sudoku, &take_ip_sudoku);
-                copy_sudoku(&solved_sudoku, &take_ip_sudoku);
+                copy_base_sudoku(&sudoku, &take_ip_sudoku, &skeleton_sudoku);
+                copy_sudoku(&solved_sudoku, &sudoku);
                 solve_bitmanipulation(&solved_sudoku);
                 init_undo_redo(&U, &R);
+                printf("\n\tGame Loaded\n\n");
                 print_sudoku(&take_ip_sudoku, &skeleton_sudoku);
                 choice_4 = 1;
 
@@ -210,7 +214,7 @@ int main() {
                     printf("2 - Get a hint..\n");
                     printf("3 - Undo.\n");
                     printf("4 - Redo.\n");
-                    printf("5 - Autosolve the sudoku.\n");
+                    printf("5 - Show Answer.\n");
                     printf("6 - Save sudoku and return..\n");
                     printf("7 - Check wrong Inputs..\n");
                     printf("8 - Reset Sudoku\n");
@@ -243,17 +247,16 @@ int main() {
                             print_sudoku(&take_ip_sudoku, &skeleton_sudoku);
                             break;
                         case 5:
-                            init_sudoku(&extra_sudoku, sudoku.size);
-                            copy_sudoku(&extra_sudoku, &take_ip_sudoku);
+                            copy_sudoku(&extra_sudoku, &sudoku);
                             start = clock();
-                            solve_sudoku(&sudoku);
+                            solve_sudoku(&extra_sudoku);
                             end = clock();
                             time = (double)(end - start)/CLOCKS_PER_SEC;
                             print_sudoku(&solved_sudoku, &skeleton_sudoku);
                             printf("Execution time = %f secs\n\n", time);
-                            copy_sudoku(&extra_sudoku, &take_ip_sudoku);
+                            copy_sudoku(&extra_sudoku, &sudoku);
                             start = clock();
-                            solve_bitmanipulation(&sudoku);
+                            solve_bitmanipulation(&extra_sudoku);
                             end = clock();
                             time = (double)(end - start)/CLOCKS_PER_SEC;
                             print_sudoku(&solved_sudoku, &skeleton_sudoku);
@@ -277,12 +280,12 @@ int main() {
                                 printf("File saved as %s.\n", gamename);
                                 strcat(gamename, "_skeleton");
                                 save_sudoku_to_file(&skeleton_sudoku, gamename);
-                                printf("Returning to Main Menu..\n\n"); // Updated output string
+                                printf("Returning to Main Menu..\n\n"); 
                                 row = col = num = -1;
                                 size = difficulty = 0;
                                 gamename[0] = '\0';
                                 end_game(&sudoku, &take_ip_sudoku, &skeleton_sudoku, &solved_sudoku, &U, &R);
-                                choice_4 = 0; // FIXED: Now properly breaks the while(choice_4) loop
+                                choice_4 = 0; 
                             }
                             break;
                         case 7:
@@ -298,7 +301,7 @@ int main() {
                             end_game(&sudoku, &take_ip_sudoku, &skeleton_sudoku, &solved_sudoku, &U, &R);
                             row = col = num = -1;
                             size = difficulty = 0;
-                            choice_4 = 0; // Correctly breaks loop
+                            choice_4 = 0; 
                             gamename_copy[0] = '\0';
                             gamename[0] = '\0';
                             printf("Returning to Main Menu...\n\n");

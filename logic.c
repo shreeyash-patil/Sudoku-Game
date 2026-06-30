@@ -216,6 +216,20 @@ void copy_sudoku(Sudoku *dest, Sudoku *source){
     return;
 }
 
+void copy_base_sudoku(Sudoku *sudoku, Sudoku *ip_sudoku, Sudoku *skeleton){
+    int size = ip_sudoku -> size;
+    init_sudoku(sudoku, size);
+    for(int row = 0; row < size; row++){
+        for(int col = 0; col < size; col++){
+            if(skeleton -> box[row][col] == 1)
+                sudoku -> box[row][col] = 0;
+            else 
+                sudoku -> box[row][col] = ip_sudoku  -> box[row][col];
+        }
+    }
+    return;
+}
+
 void generate_skeleton_sudoku(Sudoku *sudoku, Sudoku *skeleton){
     int size = sudoku -> size;
     for(int row = 0; row < size; row++){
